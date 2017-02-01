@@ -19,7 +19,7 @@ public class StatusScreen extends Application {
     private Parent createContent() throws URISyntaxException, IOException, DeploymentException {
         ClientSocket client = new ClientSocket(data ->
                 Platform.runLater(() -> message.appendText(data)));
-        client.startConnection();
+        client.socketIoConnect();
 
         message.setPrefHeight(500.);
         TextField input = new TextField();

@@ -1,4 +1,8 @@
 
+import io.socket.client.IO;
+import io.socket.client.Socket;
+import io.socket.emitter.Emitter;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -17,10 +21,19 @@ import javax.websocket.WebSocketContainer;
 
 @ClientEndpoint
 public class ClientSocket {
-
     private Consumer<String> consumer;
     private ConnectionThread connectionThread = new ConnectionThread();
-    ClientSocket clientSocket = this;
+    private ClientSocket clientSocket = this;
+    private Socket ioSocket;
+
+    public void socketIoConnect() throws URISyntaxException {
+        ioSocket = IO.socket("http://127.0.0.1:3001/");
+        ioSocket.connect();
+        ioSocket.on(Socket.EVENT_MESSAGE, objects -> consumer.accept(objects.toString()));
+    }
+
+
+
 
     public ClientSocket(Consumer<String> consumer) {
         this.consumer = consumer;
@@ -55,7 +68,8 @@ public class ClientSocket {
     }
 
     public void sendMessage(String str) throws IOException {
-        session.getBasicRemote().sendText(str);
+       // session.getBasicRemote().sendText(str);
+        ioSocket.send(str);
     }
 
     private class ConnectionThread extends Thread {
@@ -64,7 +78,7 @@ public class ClientSocket {
         public void run() {
             try {
                 WebSocketContainer container = ContainerProvider.getWebSocketContainer();
-                container.connectToServer(clientSocket, new URI("ws://192.168.1.201:3000/socket.io/?EIO=3&transport=websocket"));
+                container.connectToServer(clientSocket, new URI("ws://192.168.1.201:3000/ioSocket.io/?EIO=3&transport=websocket"));
             } catch (IOException e) {
                 consumer.accept("Connection cosed");
             } catch (DeploymentException e) {
