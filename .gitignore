@@ -1,2 +1,4 @@
 .idea
 volumiofx.iml
+target/
+out/

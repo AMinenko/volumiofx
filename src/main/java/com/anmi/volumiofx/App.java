@@ -54,10 +54,11 @@ public class App extends Application {
         return root;
     }
 
-    private Scene createFileMenuContent() throws MalformedURLException, SmbException {
+    private Scene createFileMenuContent() throws MalformedURLException, SmbException, UnknownHostException {
         NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication("", "Andriy_Minenko", "F0rt0$ka1983");
-        SmbFile smbFile = new SmbFile("smb://192.168.1.1/share/");
-        HBox hboxFileMenu = new HBoxFileMenuFactory(smbFile).getHboxFileMenu();
+        SmbFile windowsShare = new SmbFile("smb://10.17.163.37/", auth);
+       // SmbFile serverShare = new SmbFile("smb://192.168.1.1/share/");
+        HBox hboxFileMenu = new HBoxFileMenuFactory(windowsShare).getHboxFileMenu();
         return new Scene(hboxFileMenu, hboxFileMenu.getMinWidth(), 120);
     }
 
