@@ -1,8 +1,8 @@
 package com.anmi.volumiofx;
 
 import com.anmi.volumiofx.scene.HBoxFileMenuFactory;
+import com.anmi.volumiofx.scene.JavaSocket;
 import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.event.Event;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -14,10 +14,7 @@ import jcifs.smb.NtlmPasswordAuthentication;
 import jcifs.smb.SmbException;
 import jcifs.smb.SmbFile;
 import lombok.extern.slf4j.Slf4j;
-import org.bff.javampd.player.Player;
-import org.bff.javampd.playlist.Playlist;
 import org.bff.javampd.server.MPD;
-import org.bff.javampd.song.MPDSong;
 
 
 import javax.websocket.DeploymentException;
@@ -29,27 +26,28 @@ import java.net.UnknownHostException;
 @Slf4j
 public class App extends Application {
 
-    private TextArea message = new TextArea();
+    private TextArea textArea = new TextArea();
     private HBoxFileMenuFactory hBoxFileMenuFactory;
     private static MPD mpd;
 
     private Parent createSocketContent() throws URISyntaxException, IOException, DeploymentException {
-        ClientSocket client = new ClientSocket(data ->
-                Platform.runLater(() -> message.appendText(data)));
-        client.socketIoConnect();
+        JavaSocket javaSocket = new JavaSocket(data ->
+                textArea.appendText(data));
 
-        message.setPrefHeight(500.);
+        textArea.setPrefHeight(500.);
+        textArea.setWrapText(true);
+
         TextField input = new TextField();
         input.setOnAction(event -> {
             String inputText = input.getText();
             try {
-                client.sendMessage(inputText);
+                javaSocket.fireCommand(inputText);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         });
 
-        VBox root = new VBox(20, message, input);
+        VBox root = new VBox(20, textArea, input);
         root.setPrefSize(800, 600);
         return root;
     }
@@ -57,39 +55,23 @@ public class App extends Application {
     private Scene createFileMenuContent() throws MalformedURLException, SmbException, UnknownHostException {
         NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication("", "Andriy_Minenko", "F0rt0$ka1983");
         SmbFile windowsShare = new SmbFile("smb://10.17.163.37/", auth);
-       // SmbFile serverShare = new SmbFile("smb://192.168.1.1/share/");
+        // SmbFile serverShare = new SmbFile("smb://192.168.1.1/share/");
         HBox hboxFileMenu = new HBoxFileMenuFactory(windowsShare).getHboxFileMenu();
         return new Scene(hboxFileMenu, hboxFileMenu.getMinWidth(), 120);
     }
 
 
-
     @Override
     public void start(javafx.stage.Stage primaryStage) throws Exception {
-      //  pmdStart();
-        // primaryStage.setScene(new Scene(createSocketContent()));
-        primaryStage.setScene(createFileMenuContent());
+
+        //Workable socket
+        primaryStage.setScene(new Scene(createSocketContent()));
         primaryStage.show();
-    }
-
-    private void pmdStart() throws MalformedURLException, UnknownHostException {
-        MPD mpd = new MPD.Builder()
-                .server("127.0.0.1")
-                .build();
-
-        final Player player = mpd.getPlayer();
-        final Playlist playlist = mpd.getPlaylist();
-        playlist.clearPlaylist();
-        player.getStatus();
-         final MPDSong s = new MPDSong("/home/anmi/Music/01. Hotel California.wma","");
-        playlist.addSong(s);
-        player.play();
-    }
-
-
-    void handle(Event event){
 
     }
+
+
+
     public static void main(String[] args) {
         launch(args);
     }
