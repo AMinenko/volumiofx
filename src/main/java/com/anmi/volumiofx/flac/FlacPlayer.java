@@ -15,7 +15,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,14 +39,16 @@ public class FlacPlayer implements PCMProcessor {
     }
 
 
-    public void addListener (LineListener listener)
-    {
+    public void addListener(LineListener listener) {
         listeners.add(listener);
     }
 
     @Override
     public void processStreamInfo(StreamInfo streamInfo) {
         try {
+           /* if (isPlaying()) {
+                stopPlay();
+            }*/
             fmt = streamInfo.getAudioFormat();
             info = new DataLine.Info(SourceDataLine.class, fmt, AudioSystem.NOT_SPECIFIED);
             line = (SourceDataLine) AudioSystem.getLine(info);
@@ -62,11 +63,22 @@ public class FlacPlayer implements PCMProcessor {
             line.start();
         } catch (LineUnavailableException e) {
             e.printStackTrace();
+            line.drain();
+            line.close();
         }
     }
 
     @Override
     public void processPCM(ByteData pcm) {
         line.write(pcm.getData(), 0, pcm.getLen());
+    }
+
+    public boolean isPlaying() {
+        return line != null && line.isOpen();
+    }
+
+    public void stopPlay() {
+        line.drain();
+        line.close();
     }
 }

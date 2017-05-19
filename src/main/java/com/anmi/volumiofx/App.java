@@ -54,7 +54,7 @@ public class App extends Application {
 
     private Scene createFileMenuContent() throws MalformedURLException, SmbException, UnknownHostException {
         NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication("", "Andriy_Minenko", "F0rt0$ka1983");
-        SmbFile windowsShare = new SmbFile("smb://10.17.163.37/", auth);
+        SmbFile windowsShare = new SmbFile("smb://127.0.0.1/", auth);
         // SmbFile serverShare = new SmbFile("smb://192.168.1.1/share/");
         HBox hboxFileMenu = new HBoxFileMenuFactory(windowsShare).getHboxFileMenu();
         return new Scene(hboxFileMenu, hboxFileMenu.getMinWidth(), 120);
@@ -63,10 +63,14 @@ public class App extends Application {
 
     @Override
     public void start(javafx.stage.Stage primaryStage) throws Exception {
+        //
+        createFileMenuContent();
+        primaryStage.setScene(createFileMenuContent());
+        primaryStage.show();
 
         //Workable socket
-        primaryStage.setScene(new Scene(createSocketContent()));
-        primaryStage.show();
+        //primaryStage.setScene(new Scene(createSocketContent()));
+        //primaryStage.show();
 
     }
 

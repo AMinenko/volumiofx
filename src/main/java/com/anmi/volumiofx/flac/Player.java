@@ -1,18 +1,29 @@
 package com.anmi.volumiofx.flac;
 
-import java.io.IOException;
+import javafx.concurrent.Task;
+
 import java.io.InputStream;
 
-public class Player extends Thread {
-
+public class Player extends Task{
     FlacPlayer flacPlayer;
+    InputStream file;
 
-    @Override
-    public void run() {
+    public Player(InputStream inputStream) {
         flacPlayer = new FlacPlayer();
+        this.file = inputStream;
     }
 
-    public void play(InputStream file) throws IOException {
+    @Override
+    protected Object call() throws Exception {
         flacPlayer.decode(file);
+        return null;
+    }
+
+    public boolean isPlayng(){
+        return flacPlayer.isPlaying();
+    }
+
+    public void stop() {
+        flacPlayer.stopPlay();
     }
 }
