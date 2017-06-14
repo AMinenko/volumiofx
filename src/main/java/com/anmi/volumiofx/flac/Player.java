@@ -1,29 +1,57 @@
 package com.anmi.volumiofx.flac;
 
-import javafx.concurrent.Task;
-
+import java.io.IOException;
 import java.io.InputStream;
 
-public class Player extends Task{
-    FlacPlayer flacPlayer;
-    InputStream file;
+public class Player implements Runnable {
+    private FlacPlayer flacPlayer = new FlacPlayer();
+    private InputStream file;
+    private volatile boolean running;
+    private Thread thread = new Thread(this);;
 
-    public Player(InputStream inputStream) {
-        flacPlayer = new FlacPlayer();
-        this.file = inputStream;
-    }
+    public void play(InputStream inputStream) {
+        file = inputStream;
+       /* should be replaced by a loop
+       if (thread != null) {
+            thread.stop();
+        }*/
+        if (running) {
+            stop();
+        }
 
-    @Override
-    protected Object call() throws Exception {
-        flacPlayer.decode(file);
-        return null;
-    }
+        thread.start();
+        running = true;
 
-    public boolean isPlayng(){
-        return flacPlayer.isPlaying();
     }
 
     public void stop() {
-        flacPlayer.stopPlay();
+        running = false;
     }
+
+    @Override
+    public void run() {
+        while (running) {
+            try {
+                flacPlayer.play(file);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        flacPlayer.stop();
+    }
+
+    /*For Runnable
+    @Override
+    public Object call() {
+        while (running) {
+            try {
+                flacPlayer.play(file);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        flacPlayer.stop();
+        return running;
+    }*/
 }
+
