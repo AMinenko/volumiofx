@@ -47,7 +47,7 @@ public class PlayerController {
 
     private void setFilesToList(SmbFile smbFile) {
         try {
-            fileList.getItems().addAll(smbFile.listFiles());
+            fileList.getItems().addAll(createNames(smbFile.listFiles()));
         } catch (SmbException e) {
             e.printStackTrace();
         }
@@ -56,7 +56,7 @@ public class PlayerController {
     private SmbFile createFileMenuContent() {
         NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication("", "Andriy_Minenko", "F0rt0$ka1983");
         try {
-            return new SmbFile("smb://127.0.0.1/", auth);
+           return new SmbFile("smb://127.0.0.1/", auth);
         } catch (MalformedURLException e) {
             e.printStackTrace();
         }
@@ -72,8 +72,8 @@ public class PlayerController {
                     Principal principal = selectedItem.getPrincipal();
                     NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication("", principal.getName(), "F0rt0$ka1983");
 
-                    SmbFile parentDir = new SmbFile(selectedItem.getParent(), auth);
-                    fileList.getItems().setAll(createNames(selectedItem.listFiles(),auth));
+                    SmbFile parentDir = new SmbFile(selectedItem.getURL(), auth);
+                    fileList.getItems().setAll(createNames(parentDir.listFiles()));
                     fileList.getItems().set(0, parentDir);
                 }
                 if (selectedItem.isFile()) {
@@ -92,17 +92,10 @@ public class PlayerController {
         });
     }
 
-    private Collection createNames(SmbFile[] smbFiles, NtlmPasswordAuthentication auth) {
-       return Arrays.stream(smbFiles).map(el -> {
-            SmbFile smbFile = null;
-            try {
-                smbFile = new SmbFile(el.getURL().toString(), el.getName(), auth);
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
-            }
-            return smbFile;
-        }).collect(Collectors.toList());
+    private Collection createNames(SmbFile[] smbFiles) {
+        return Arrays.stream(smbFiles).map(VolumioSmbFile::ofSmbFile).collect(Collectors.toList());
     }
+
 
     private void setButtonBarOnClickEventListener() {
         stop.setOnMouseClicked(event -> stopPlay());
