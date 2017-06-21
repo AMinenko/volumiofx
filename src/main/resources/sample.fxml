@@ -5,16 +5,16 @@
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.layout.BorderPane?>
 
-<BorderPane prefHeight="768.0" prefWidth="1024.0" xmlns="http://javafx.com/javafx/null"
-            xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.anmi.volumiofx.scene.PlayerController">
+<BorderPane prefHeight="768.0" prefWidth="1024.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.anmi.volumiofx.scene.PlayerController">
     <center>
-        <ListView fx:id="fileList" prefHeight="768.0" prefWidth="1024.0" BorderPane.alignment="CENTER"/>
+        <ListView fx:id="fileList" prefHeight="768.0" prefWidth="1024.0" BorderPane.alignment="CENTER" />
     </center>
     <bottom>
         <ButtonBar fx:id="buttonBar" prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
             <buttons>
-                <Button fx:id="play" mnemonicParsing="false" text="Play"/>
-                <Button fx:id="stop" mnemonicParsing="false" text="Stop"/>
+                <Button fx:id="play" mnemonicParsing="false" text="Play" />
+                <Button fx:id="stop" mnemonicParsing="false" text="Stop" />
+            <Button fx:id="resume" mnemonicParsing="false" text="Resume" />
             </buttons>
         </ButtonBar>
     </bottom>

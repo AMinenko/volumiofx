@@ -1,5 +1,6 @@
 package com.anmi.volumiofx.scene;
 
+import com.anmi.volumiofx.flac.Player;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
@@ -10,7 +11,6 @@ import jcifs.smb.SmbFile;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.UnknownHostException;
 import java.security.Principal;
 import java.util.Arrays;
 import java.util.Collection;
@@ -31,6 +31,13 @@ public class PlayerController {
     @FXML
     private Button stop;
 
+    @FXML
+    private Button resume;
+
+    private Player player = new Player();
+
+    private Thread playerThread;
+
 
     @FXML
     public void initialize() {
@@ -47,16 +54,16 @@ public class PlayerController {
 
     private void setFilesToList(SmbFile smbFile) {
         try {
-            fileList.getItems().addAll(createNames(smbFile.listFiles()));
+            fileList.getItems().addAll(smbFile.listFiles());
         } catch (SmbException e) {
             e.printStackTrace();
         }
     }
 
     private SmbFile createFileMenuContent() {
-        NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication("", "Andriy_Minenko", "F0rt0$ka1983");
+        NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication("", "Andriy_Minenko", "F0rt0$ka1715");
         try {
-           return new SmbFile("smb://127.0.0.1/", auth);
+            return new SmbFile("smb://127.0.0.1/", auth);
         } catch (MalformedURLException e) {
             e.printStackTrace();
         }
@@ -70,19 +77,25 @@ public class PlayerController {
             try {
                 if (selectedItem.isDirectory()) {
                     Principal principal = selectedItem.getPrincipal();
-                    NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication("", principal.getName(), "F0rt0$ka1983");
+                    NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication("", principal.getName(), "F0rt0$ka1715");
 
                     SmbFile parentDir = new SmbFile(selectedItem.getURL(), auth);
-                    fileList.getItems().setAll(createNames(parentDir.listFiles()));
+                    fileList.getItems().setAll(parentDir.listFiles());
                     fileList.getItems().set(0, parentDir);
                 }
                 if (selectedItem.isFile()) {
                     System.out.println("start playing: " + selectedItem.getCanonicalPath());
-                   /* if (player != null) {
-                        player.stop();
-                        selectedItem.getInputStream().close();
+
+                    player.setTrack(selectedItem.getInputStream());
+                    if (playerThread == null) {
+                        playerThread = new Thread(player);
+                        playerThread.start();
                     }
-                    player.play(selectedItem.getInputStream());*/
+
+                   /* if (player != null) {
+                        player.shutDown();
+                        selectedItem.getInputStream().close();
+                    }*/
 
                 }
             } catch (IOException e) {
@@ -98,7 +111,8 @@ public class PlayerController {
 
 
     private void setButtonBarOnClickEventListener() {
-        stop.setOnMouseClicked(event -> stopPlay());
+        stop.setOnMouseClicked(event -> player.stop());
+        resume.setOnMouseClicked(event -> player.resume());
     }
 
     private void stopPlay() {

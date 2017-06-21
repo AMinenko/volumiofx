@@ -22,24 +22,13 @@ public class Decoder implements PCMProcessor {
     private DataLine.Info info;
     private SourceDataLine line;
     private List listeners = new ArrayList<LineListener>();
+    private FLACDecoder decoder;
+    private long samplesDecoded;
 
-
-    public void decode(String fileName) throws IOException {
-        FileInputStream is = new FileInputStream(fileName);
-        FLACDecoder decoder = new FLACDecoder(is);
-        decoder.addPCMProcessor(this);
-        decoder.decode();
-    }
 
     public void decode(InputStream file) throws IOException {
-        FLACDecoder decoder = new FLACDecoder(file);
+        this.decoder = new FLACDecoder(file);
         decoder.addPCMProcessor(this);
-        decoder.decode();
-    }
-
-
-    public void addListener(LineListener listener) {
-        listeners.add(listener);
     }
 
     //Somehow Internally used method - AnMi
@@ -47,7 +36,7 @@ public class Decoder implements PCMProcessor {
     public void processStreamInfo(StreamInfo streamInfo) {
         try {
            /* if (isPlaying()) {
-                stopPlay();
+                stop();
             }*/
             fmt = streamInfo.getAudioFormat();
             info = new DataLine.Info(SourceDataLine.class, fmt, AudioSystem.NOT_SPECIFIED);
@@ -57,8 +46,7 @@ public class Decoder implements PCMProcessor {
             //  way to get the events triggered.
             int size = listeners.size();
             for (int index = 0; index < size; index++)
-                line.addLineListener((LineListener) listeners.get(index));
-
+            line.addLineListener((LineListener) listeners.get(index));
             line.open(fmt, AudioSystem.NOT_SPECIFIED);
             line.start();
         } catch (LineUnavailableException e) {
@@ -75,11 +63,29 @@ public class Decoder implements PCMProcessor {
     }
 
     public boolean isPlaying() {
-        return line != null && line.isOpen();
+       return line != null && line.isRunning();
     }
 
-    public void stopPlay() {
-        line.drain();
-        line.close();
+    public void stop() {
+        samplesDecoded = decoder.getSamplesDecoded();
+        line.stop();
+    }
+
+    public void resume() {
+        try {
+            decoder.seek(samplesDecoded);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+       // line.start();
+    }
+
+    public void stopAndDrain() {
+        if(line!=null){
+            line.isOpen();
+            line.isRunning();
+            line.stop();
+            line.drain();
+        }
     }
 }
