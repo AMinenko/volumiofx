@@ -6,7 +6,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.net.URI;
 import java.net.URL;
 
 @Getter
@@ -17,6 +16,9 @@ public class VolumioSmbFile {
     private URL url;
 
     public static VolumioSmbFile ofSmbFile(SmbFile smbFile) {
+        if(smbFile==null){
+            System.out.println();
+        }
         return new VolumioSmbFile(smbFile.getName(), smbFile.getURL());
     }
 

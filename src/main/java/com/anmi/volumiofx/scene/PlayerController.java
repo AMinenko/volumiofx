@@ -1,5 +1,6 @@
 package com.anmi.volumiofx.scene;
 
+import com.anmi.volumiofx.flac.Player;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
@@ -10,10 +11,7 @@ import jcifs.smb.SmbFile;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.UnknownHostException;
-import java.security.Principal;
-import java.util.Arrays;
-import java.util.Collection;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -31,6 +29,9 @@ public class PlayerController {
     @FXML
     private Button stop;
 
+    private NtlmPasswordAuthentication auth;
+
+    private Player player = new Player();
 
     @FXML
     public void initialize() {
@@ -38,7 +39,18 @@ public class PlayerController {
         initButtons();
         setFilesToList(smbFile);
         setListViewOnCLickEvent();
+        setStopButtonOnClickEvent();
 
+    }
+
+    private void setStopButtonOnClickEvent() {
+        stop.setOnMouseClicked(mouseEvent -> {
+            try {
+                player.stop();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     private void initButtons() {
@@ -54,9 +66,10 @@ public class PlayerController {
     }
 
     private SmbFile createFileMenuContent() {
-        NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication("", "Andriy_Minenko", "F0rt0$ka1983");
+        auth = new NtlmPasswordAuthentication("", "Andriy_Minenko", "F0rt0$ka1983");
         try {
-           return new SmbFile("smb://127.0.0.1/", auth);
+            // return new SmbFile("smb://127.0.0.1/", auth);
+            return new SmbFile("smb://192.168.1.1/");
         } catch (MalformedURLException e) {
             e.printStackTrace();
         }
@@ -66,23 +79,17 @@ public class PlayerController {
 
     private void setListViewOnCLickEvent() {
         fileList.setOnMouseClicked(click -> {
-            SmbFile selectedItem = (SmbFile) fileList.getSelectionModel().getSelectedItem();
+            VolumioSmbFile selectedItem = (VolumioSmbFile) fileList.getSelectionModel().getSelectedItem();
             try {
-                if (selectedItem.isDirectory()) {
-                    Principal principal = selectedItem.getPrincipal();
-                    NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication("", principal.getName(), "F0rt0$ka1983");
-
-                    SmbFile parentDir = new SmbFile(selectedItem.getURL(), auth);
-                    fileList.getItems().setAll(createNames(parentDir.listFiles()));
-                    fileList.getItems().set(0, parentDir);
+                SmbFile selectedSmbFile = new SmbFile(selectedItem.getUrl());
+                if (selectedSmbFile.isDirectory()) {
+                    fileList.getItems().setAll(createNames(selectedSmbFile.listFiles()));
+                    fileList.getItems().add(0, VolumioSmbFile.ofSmbFile(selectedSmbFile));
                 }
-                if (selectedItem.isFile()) {
-                    System.out.println("start playing: " + selectedItem.getCanonicalPath());
-                   /* if (player != null) {
-                        player.stop();
-                        selectedItem.getInputStream().close();
-                    }
-                    player.play(selectedItem.getInputStream());*/
+                if (selectedSmbFile.isFile()) {
+                    System.out.println("start playing: " + selectedSmbFile.getCanonicalPath());
+                    Collection playlist = createNames(createPlayList(selectedSmbFile));
+                    player.play(selectedSmbFile.getInputStream());
 
                 }
             } catch (IOException e) {
@@ -103,6 +110,13 @@ public class PlayerController {
 
     private void stopPlay() {
         System.out.println("Stop");
+    }
+
+    private SmbFile[] createPlayList(SmbFile selectedSmbFile) throws MalformedURLException, SmbException {
+        SmbFile[] alldirFiles = new SmbFile(selectedSmbFile.getParent()).listFiles();
+        return (SmbFile[]) Arrays.stream(alldirFiles)
+                .collect(Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(SmbFile::getName))))
+                .tailSet(selectedSmbFile).stream().toArray(SmbFile[]::new);
     }
 
 }

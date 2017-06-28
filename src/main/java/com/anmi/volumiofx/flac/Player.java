@@ -1,57 +1,31 @@
 package com.anmi.volumiofx.flac;
 
+import com.anmi.volumiofx.scene.VolumioSmbFile;
+import org.eclipse.jetty.util.BlockingArrayQueue;
+
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Queue;
 
-public class Player implements Runnable {
+public class Player{
     private FlacPlayer flacPlayer = new FlacPlayer();
-    private InputStream file;
-    private volatile boolean running;
-    private Thread thread = new Thread(this);;
+    private Thread thread;
+    private InputStream inputStream;
+    private Queue<VolumioSmbFile> playlist = new BlockingArrayQueue<>();
 
     public void play(InputStream inputStream) {
-        file = inputStream;
-       /* should be replaced by a loop
-       if (thread != null) {
-            thread.stop();
-        }*/
-        if (running) {
-            stop();
-        }
-
+        this.inputStream=inputStream;
+        flacPlayer.setFile(inputStream);
+        thread = new Thread(flacPlayer);
         thread.start();
-        running = true;
-
     }
 
-    public void stop() {
-        running = false;
+    public void stop() throws IOException {
+       if( thread != null && thread.isAlive()){
+           flacPlayer.stop();
+           this.inputStream.close();
+       }
     }
 
-    @Override
-    public void run() {
-        while (running) {
-            try {
-                flacPlayer.play(file);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        flacPlayer.stop();
-    }
-
-    /*For Runnable
-    @Override
-    public Object call() {
-        while (running) {
-            try {
-                flacPlayer.play(file);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        flacPlayer.stop();
-        return running;
-    }*/
 }
 
